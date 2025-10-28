@@ -4,3 +4,4 @@ prophet
 joblib
 matplotlib
 numpy
+openpyxl
