@@ -62,8 +62,8 @@ last_historical_year = df['Tahun'].max()
 for i in range(num_future_years):
     year = last_historical_year + 1 + i
     st.write(f"Tahun: {year}")
-    future_nilai = st.number_input(f"Nilai (Rp. Juta) untuk {year}:", min_value=0.0, value=int(df['Nilai (Rp. Juta)'].mean()), key=f'nilai_{year}')
-    future_harga = st.number_input(f"Harga Rata-Rata Tertimbang (Rp/ ribu ekor) untuk {year}:", min_value=0.0, value=int(df['Harga Rata-Rata Tertimbang(Rp/ ribu ekor)'].mean()), key=f'harga_{year}')
+    future_nilai = st.number_input(f"Nilai (Rp. Juta) untuk {year}:", min_value=1, value=int(df['Nilai (Rp. Juta)'].mean()), key=f'nilai_{year}')
+    future_harga = st.number_input(f"Harga Rata-Rata Tertimbang (Rp/ ribu ekor) untuk {year}:", min_value=1, value=int(df['Harga Rata-Rata Tertimbang(Rp/ ribu ekor)'].mean()), key=f'harga_{year}')
     future_regressor_values[year] = {'Nilai (Rp. Juta)': future_nilai, 'Harga Rata-Rata Tertimbang(Rp/ ribu ekor)': future_harga}
 
 
