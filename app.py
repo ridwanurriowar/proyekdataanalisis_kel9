@@ -71,10 +71,6 @@ if st.button("Prediksi Volume"):
         future = model.make_future_dataframe(periods=num_future_years, freq='Y') # Predict for the specified number of future years
         future['ds'] = future['ds'].dt.tz_localize(None) # Remove timezone information if present
 
-        # Fill NaN values in regressor columns in the future dataframe with the last known value
-        future['Nilai (Rp. Juta)'] = future['Nilai (Rp. Juta)'].fillna(method='ffill')
-        future['Harga Rata-Rata Tertimbang(Rp/ ribu ekor)'] = future['Harga Rata-Rata Tertimbang(Rp/ ribu ekor)'].fillna(method='ffill')
-
         # Get the last historical date from the training data for this combination
         last_historical_date = df[(df['Kelompok Ikan'] == selected_fish_group) & (df['Kab / Kota'] == selected_city)]['Tahun'].max()
         last_historical_date = pd.to_datetime(last_historical_date, format="%Y")
