@@ -32,16 +32,12 @@ except FileNotFoundError:
     st.error("Error: Filtered data file not found. Please ensure 'produksi_pembenihan_jawaBarat_2019_2023_filtered.xlsx' is in the correct directory.")
     st.stop()
 
-for city in df['Kab / Kota'].unique():
-    df_city = df[df['Kab / Kota'] == city]
-    plt.figure(figsize=(12, 6))
-    sns.barplot(x='Kelompok Ikan', y='Volume (Ribu Ekor)', data=df_city, estimator=sum)
-    plt.title(f'Total Volume per Fish Group in {city}')
-    plt.xlabel('Fish Group')
-    plt.ylabel('Total Volume (Ribu Ekor)')
-    plt.xticks(rotation=45, ha='right')
-    plt.tight_layout()
-    plt.show()
+fish_production_by_city = df.groupby('Kab / Kota')['Kelompok Ikan'].unique().to_dict()
+
+st.subheader("Jenis Ikan yang Diproduksi per Kabupaten / Kota:")
+
+for city, fish_types in fish_production_by_city.items():
+    st.write(f"**{city}:** {', '.join(fish_types)}")
 
 fish_groups = df['Kelompok Ikan'].unique().tolist()
 cities = df['Kab / Kota'].unique().tolist()
