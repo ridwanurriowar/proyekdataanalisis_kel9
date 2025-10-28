@@ -23,36 +23,80 @@ st.markdown("""
 7.  Sebuah plot yang membandingkan data historis dengan hasil prediksi juga akan ditampilkan.
 """)
 
+# --- FITUR UNGGAH DATA ---
+st.sidebar.title("⚙️ Opsi Data")
+uploaded_file = st.sidebar.file_uploader(
+    "Unggah Dataset Kustom (Opsional)",
+    type=["xlsx"],
+    help="Unggah file Excel (.xlsx) dengan kolom yang sama dengan dataset default: 'Kelompok Ikan', 'Kab / Kota', 'Tahun', 'Volume (Ribu Ekor)', 'Nilai (Rp. Juta)', 'Harga Rata-Rata Tertimbang(Rp/ ribu ekor)'"
+)
 
-# Load the original dataframe to get unique values for dropdowns
-# Assuming the filtered dataframe is saved as 'produksi_pembenihan_jawaBarat_2019_2023_filtered.xlsx'
-try:
-    df = pd.read_excel('./content/produksi_pembenihan_jawaBarat_2019_2023_filtered.xlsx')
-except FileNotFoundError:
-    st.error("Error: Filtered data file not found. Please ensure 'produksi_pembenihan_jawaBarat_2019_2023_filtered.xlsx' is in the correct directory.")
+df = None  # Inisialisasi dataframe
+default_data_path = './content/produksi_pembenihan_jawaBarat_2019_2023_filtered.xlsx'
+
+if uploaded_file is not None:
+    st.sidebar.success("Menggunakan file yang diunggah.")
+    try:
+        df = pd.read_excel(uploaded_file)
+    except Exception as e:
+        st.error(f"Terjadi kesalahan saat membaca file yang diunggah: {e}")
+        st.stop()
+else:
+    st.sidebar.info("Menggunakan dataset default.")
+    try:
+        df = pd.read_excel(default_data_path)
+    except FileNotFoundError:
+        st.error(f"Error: File data default tidak ditemukan di '{default_data_path}'. Harap unggah file kustom di sidebar untuk melanjutkan.")
+        st.stop()
+    except Exception as e:
+        st.error(f"Terjadi kesalahan saat membaca file default: {e}")
+        st.stop()
+
+# --- VALIDASI DATASET ---
+if df is not None:
+    required_columns = [
+        'Kelompok Ikan', 
+        'Kab / Kota', 
+        'Tahun', 
+        'Volume (Ribu Ekor)', 
+        'Nilai (Rp. Juta)', 
+        'Harga Rata-Rata Tertimbang(Rp/ ribu ekor)'
+    ]
+    
+    # Periksa apakah semua kolom yang diperlukan ada
+    missing_cols = [col for col in required_columns if col not in df.columns]
+    
+    if missing_cols:
+        st.error(f"Dataset yang dimuat tidak memiliki kolom yang diperlukan: {', '.join(missing_cols)}")
+        st.stop()
+else:
+    st.error("Dataframe tidak berhasil dimuat. Aplikasi berhenti.")
     st.stop()
 
-# Create a table of fish types per city
+# --- LANJUTAN APLIKASI (KODE ASLI ANDA) ---
+
+# Buat tabel jenis ikan per kota
 fish_production_by_city = df.groupby('Kab / Kota')['Kelompok Ikan'].unique().reset_index()
 fish_production_by_city['Kelompok Ikan'] = fish_production_by_city['Kelompok Ikan'].apply(lambda x: ', '.join(x))
 
 st.subheader("Jenis Ikan yang Diproduksi per Kabupaten / Kota:")
 st.table(fish_production_by_city)
 
+# Dapatkan daftar unik dari dataframe yang dimuat
 fish_groups = df['Kelompok Ikan'].unique().tolist()
 cities = df['Kab / Kota'].unique().tolist()
 
 selected_fish_group = st.selectbox("Pilih Kelompok Ikan:", fish_groups)
 selected_city = st.selectbox("Pilih Kabupaten / Kota:", cities)
 
-# Input for number of future years to predict
+# Input untuk jumlah tahun prediksi
 num_future_years = st.number_input("Jumlah tahun ke depan untuk prediksi:", min_value=1, value=3, step=1)
 
-# Input for future regressor values for multiple years
+# Input untuk nilai regressor masa depan
 future_regressor_values = {}
 st.write(f"Masukkan nilai regressor untuk {num_future_years} tahun ke depan:")
 
-# Get the last historical year
+# Dapatkan tahun historis terakhir dari dataframe
 last_historical_year = df['Tahun'].max()
 
 for i in range(num_future_years):
@@ -64,58 +108,58 @@ for i in range(num_future_years):
 
 
 if st.button("Prediksi Volume"):
-    # Construct the model filename
+    # Buat nama file model
     model_filename = f'prophet_model_{selected_fish_group.replace(" ", "_")}_{selected_city.replace(" ", "_")}.pkl'
     model_filepath = os.path.join('./content/prophet_models', model_filename)
 
     if not os.path.exists(model_filepath):
-        st.warning(f"Model for {selected_fish_group} in {selected_city} not found.")
+        st.warning(f"Model untuk {selected_fish_group} di {selected_city} tidak ditemukan.")
     else:
-        # Load the trained model
+        # Muat model yang telah dilatih
         model = joblib.load(model_filepath)
 
-        # Create future dataframe for prediction
-        future = model.make_future_dataframe(periods=num_future_years, freq='Y') # Predict for the specified number of future years
-        future['ds'] = future['ds'].dt.tz_localize(None) # Remove timezone information if present
+        # Buat dataframe masa depan untuk prediksi
+        future = model.make_future_dataframe(periods=num_future_years, freq='Y') # Prediksi untuk jumlah tahun ke depan
+        future['ds'] = future['ds'].dt.tz_localize(None) # Hapus informasi zona waktu jika ada
 
-        # Get the last historical date from the training data for this combination
+        # Dapatkan tanggal historis terakhir dari data pelatihan
         last_historical_date = df[(df['Kelompok Ikan'] == selected_fish_group) & (df['Kab / Kota'] == selected_city)]['Tahun'].max()
         last_historical_date = pd.to_datetime(last_historical_date, format="%Y")
 
-        # Get the historical regressor values
+        # Dapatkan nilai regressor historis
         historical_regressors = df[(df['Kelompok Ikan'] == selected_fish_group) & (df['Kab / Kota'] == selected_city)].copy()
         historical_regressors['ds'] = pd.to_datetime(historical_regressors['Tahun'], format="%Y")
         historical_regressors = historical_regressors[['ds', 'Nilai (Rp. Juta)', 'Harga Rata-Rata Tertimbang(Rp/ ribu ekor)']]
 
-        # Merge historical regressor values onto the future dataframe for historical dates
+        # Gabungkan nilai regressor historis ke dataframe masa depan
         future = future.merge(historical_regressors, on='ds', how='left')
 
-        # Assign the user-input future regressor values to the future dates
+        # Tetapkan nilai regressor masa depan yang diinput pengguna
         for year, values in future_regressor_values.items():
             future.loc[future['ds'].dt.year == year, 'Nilai (Rp. Juta)'] = values['Nilai (Rp. Juta)']
             future.loc[future['ds'].dt.year == year, 'Harga Rata-Rata Tertimbang(Rp/ ribu ekor)'] = values['Harga Rata-Rata Tertimbang(Rp/ ribu ekor)']
 
-        # Fill NaN values in regressor columns in the future dataframe with the last known value for historical dates
+        # Isi nilai NaN di kolom regressor (untuk tanggal historis)
         future['Nilai (Rp. Juta)'] = future['Nilai (Rp. Juta)'].fillna(method='ffill')
         future['Harga Rata-Rata Tertimbang(Rp/ ribu ekor)'] = future['Harga Rata-Rata Tertimbang(Rp/ ribu ekor)'].fillna(method='ffill')
 
-        # Make prediction
+        # Lakukan prediksi
         forecast = model.predict(future)
 
-        # Display the prediction for the future years
+        # Tampilkan prediksi untuk tahun-tahun mendatang
         future_forecast = forecast[forecast['ds'] > last_historical_date]
         if not future_forecast.empty:
             st.subheader("Prediksi Volume Produksi untuk Tahun Berikutnya:")
             for index, row in future_forecast.iterrows():
-                 st.write(f"Tahun: {row['ds'].year}, Volume (Ribu Ekor): {row['yhat']:.2f}")
-
+                st.write(f"Tahun: {row['ds'].year}, Volume (Ribu Ekor): {row['yhat']:.2f}")
         else:
             st.write("Tidak ada prediksi untuk tahun mendatang.")
 
-        # Optional: Display historical vs forecast plot
+        # Tampilkan plot historis vs prediksi
         st.subheader("Historis vs Prediksi")
         historical_subset = df[(df['Kelompok Ikan'] == selected_fish_group) & (df['Kab / Kota'] == selected_city)].copy()
         historical_subset['ds'] = pd.to_datetime(historical_subset['Tahun'], format="%Y")
+        # Agregasi jika ada duplikat tahun
         historical_subset = historical_subset.groupby('ds', as_index=False).agg({'Volume (Ribu Ekor)': 'sum'}).rename(columns={'Volume (Ribu Ekor)': 'y'})
 
 
