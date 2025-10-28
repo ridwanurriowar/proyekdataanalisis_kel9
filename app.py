@@ -4,6 +4,7 @@ import os
 import pandas as pd
 from prophet import Prophet
 import matplotlib.pyplot as plt
+import seaborn as sns
 import numpy as np
 
 
@@ -13,7 +14,7 @@ st.write("Aplikasi ini memprediksi volume produksi ikan pembenihan berdasarkan j
 st.markdown("""
 ### Cara Menggunakan Aplikasi
 
-1.  Pilih **Kelompok Ikan** yang ingin Anda prediksi volumenya dari dropdown menu.
+1.  Pilih **Kelompok Ikan** yang ingin Anda prediksi volumenya dari dropdown menu (PENTING: Tidak semua kelompok ikan diproduksi di satu kabupaten/kota).
 2.  Pilih **Kabupaten / Kota** tempat produksi ikan dari dropdown menu.
 3.  Masukkan jumlah tahun ke depan yang ingin Anda prediksi volumenya.
 4.  Masukkan nilai **Nilai (Rp. Juta)** dan **Harga Rata-Rata Tertimbang (Rp/ ribu ekor)** yang diperkirakan untuk setiap tahun prediksi di kolom input yang tersedia.
@@ -31,6 +32,16 @@ except FileNotFoundError:
     st.error("Error: Filtered data file not found. Please ensure 'produksi_pembenihan_jawaBarat_2019_2023_filtered.xlsx' is in the correct directory.")
     st.stop()
 
+for city in df['Kab / Kota'].unique():
+    df_city = df[df['Kab / Kota'] == city]
+    plt.figure(figsize=(12, 6))
+    sns.barplot(x='Kelompok Ikan', y='Volume (Ribu Ekor)', data=df_city, estimator=sum)
+    plt.title(f'Total Volume per Fish Group in {city}')
+    plt.xlabel('Fish Group')
+    plt.ylabel('Total Volume (Ribu Ekor)')
+    plt.xticks(rotation=45, ha='right')
+    plt.tight_layout()
+    plt.show()
 
 fish_groups = df['Kelompok Ikan'].unique().tolist()
 cities = df['Kab / Kota'].unique().tolist()
@@ -51,8 +62,8 @@ last_historical_year = df['Tahun'].max()
 for i in range(num_future_years):
     year = last_historical_year + 1 + i
     st.write(f"Tahun: {year}")
-    future_nilai = st.number_input(f"Nilai (Rp. Juta) untuk {year}:", min_value=0.0, value=float(df['Nilai (Rp. Juta)'].mean()), key=f'nilai_{year}')
-    future_harga = st.number_input(f"Harga Rata-Rata Tertimbang (Rp/ ribu ekor) untuk {year}:", min_value=0.0, value=float(df['Harga Rata-Rata Tertimbang(Rp/ ribu ekor)'].mean()), key=f'harga_{year}')
+    future_nilai = st.number_input(f"Nilai (Rp. Juta) untuk {year}:", min_value=0.0, value=int(df['Nilai (Rp. Juta)'].mean()), key=f'nilai_{year}')
+    future_harga = st.number_input(f"Harga Rata-Rata Tertimbang (Rp/ ribu ekor) untuk {year}:", min_value=0.0, value=int(df['Harga Rata-Rata Tertimbang(Rp/ ribu ekor)'].mean()), key=f'harga_{year}')
     future_regressor_values[year] = {'Nilai (Rp. Juta)': future_nilai, 'Harga Rata-Rata Tertimbang(Rp/ ribu ekor)': future_harga}
 
 
