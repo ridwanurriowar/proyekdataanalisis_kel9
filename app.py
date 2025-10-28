@@ -32,12 +32,12 @@ except FileNotFoundError:
     st.error("Error: Filtered data file not found. Please ensure 'produksi_pembenihan_jawaBarat_2019_2023_filtered.xlsx' is in the correct directory.")
     st.stop()
 
-fish_production_by_city = df.groupby('Kab / Kota')['Kelompok Ikan'].unique().to_dict()
+# Create a table of fish types per city
+fish_production_by_city = df.groupby('Kab / Kota')['Kelompok Ikan'].unique().reset_index()
+fish_production_by_city['Kelompok Ikan'] = fish_production_by_city['Kelompok Ikan'].apply(lambda x: ', '.join(x))
 
 st.subheader("Jenis Ikan yang Diproduksi per Kabupaten / Kota:")
-
-for city, fish_types in fish_production_by_city.items():
-    st.write(f"**{city}:** {', '.join(fish_types)}")
+st.table(fish_production_by_city)
 
 fish_groups = df['Kelompok Ikan'].unique().tolist()
 cities = df['Kab / Kota'].unique().tolist()
