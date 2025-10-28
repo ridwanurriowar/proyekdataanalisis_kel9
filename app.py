@@ -26,7 +26,7 @@ st.markdown("""
 # Load the original dataframe to get unique values for dropdowns
 # Assuming the filtered dataframe is saved as 'produksi_pembenihan_jawaBarat_2019_2023_filtered.xlsx'
 try:
-    df = pd.read_excel('/content/produksi_pembenihan_jawaBarat_2019_2023_filtered.xlsx')
+    df = pd.read_excel('./content/produksi_pembenihan_jawaBarat_2019_2023_filtered.xlsx')
 except FileNotFoundError:
     st.error("Error: Filtered data file not found. Please ensure 'produksi_pembenihan_jawaBarat_2019_2023_filtered.xlsx' is in the correct directory.")
     st.stop()
@@ -59,7 +59,7 @@ for i in range(num_future_years):
 if st.button("Prediksi Volume"):
     # Construct the model filename
     model_filename = f'prophet_model_{selected_fish_group.replace(" ", "_")}_{selected_city.replace(" ", "_")}.pkl'
-    model_filepath = os.path.join('/content/prophet_models', model_filename)
+    model_filepath = os.path.join('./content/prophet_models', model_filename)
 
     if not os.path.exists(model_filepath):
         st.warning(f"Model for {selected_fish_group} in {selected_city} not found.")
