@@ -4,7 +4,6 @@ import os
 import pandas as pd
 from prophet import Prophet
 import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
 
 
@@ -14,7 +13,7 @@ st.write("Aplikasi ini memprediksi volume produksi ikan pembenihan berdasarkan j
 st.markdown("""
 ### Cara Menggunakan Aplikasi
 
-1.  Pilih **Kelompok Ikan** yang ingin Anda prediksi volumenya dari dropdown menu (PENTING: Tidak semua kelompok ikan diproduksi di satu kabupaten/kota).
+1.  Pilih **Kelompok Ikan** yang ingin Anda prediksi volumenya dari dropdown menu.
 2.  Pilih **Kabupaten / Kota** tempat produksi ikan dari dropdown menu.
 3.  Masukkan jumlah tahun ke depan yang ingin Anda prediksi volumenya.
 4.  Masukkan nilai **Nilai (Rp. Juta)** dan **Harga Rata-Rata Tertimbang (Rp/ ribu ekor)** yang diperkirakan untuk setiap tahun prediksi di kolom input yang tersedia.
